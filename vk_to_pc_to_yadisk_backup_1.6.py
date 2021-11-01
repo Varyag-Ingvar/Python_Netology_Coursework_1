@@ -23,12 +23,17 @@ def get_profile_list(user_id):
 
 
 def download_to_pc(profile_list):
+    names_used = set()
     for file in tqdm(profile_list['response']['items']):
         time.sleep(1)
+        file_name = str(file['likes']['count'])
         photo_url = file['sizes'][-1]['url']
         date = datetime.utcfromtimestamp(file['date']).strftime('%d.%m.%Y %H_%M_%S')
-        file_name = str(file['likes']['count']) + '__' + str(date)
         download_photo = requests.get(photo_url)
+        if file_name in names_used:
+            file_name = f'{file_name}_{date}'
+        else:
+            names_used.add(file_name)
         with open(f'{pc_download_file_path}/{file_name}.jpg', 'wb') as f:
             f.write(download_photo.content)
 
@@ -47,11 +52,18 @@ def recursive_upload(y, from_dir, to_dir):
 
 def get_info_json(profile_list):
     photos_list = []
+    names_used = set()
     for file in profile_list['response']['items']:
         photos_dict = {}
         size = file['sizes'][-1]['type']
         date = datetime.utcfromtimestamp(file['date']).strftime('%d.%m.%Y %H_%M_%S')
-        file_name = str(file['likes']['count']) + '__' + str(date) + '.jpeg'
+
+        file_name = str(file['likes']['count']) + '.jpeg'
+        if file_name in names_used:
+            file_name = f'{file_name}_{date}'
+        else:
+            names_used.add(file_name)
+
         photos_dict.update(file_name=file_name, size=size)
         photos_list.append(photos_dict)
     data_list = json.dumps(photos_list, indent=2)
@@ -62,23 +74,22 @@ if __name__ == '__main__':
     config = configparser.ConfigParser()
     config.read("settings_test.ini")
 
-    vk_user_id = int(input('Please enter VK user_id: '))
-    # vk_user_id = 552934290
     vk_token = config['vk_api']['access_token']
     api_version = config['vk_api']['api_version']
     get_photos_method_url = config['vk_api']['get_photos_method_url']
     pc_download_file_path = config['files_path']['download_file_path']
     yadisk_file_path = config['yadisk_api']['yadisk_file_path']
-    yadisk_token = str(input('Please enter YA_disk token (case sensitive!): '))
-    print("")
 
+    yadisk_token = str(input('Please enter YA_disk token (case sensitive!): '))
+
+    vk_user_id = int(input('\nPlease enter VK user_id: '))
     vk_profile_list = get_profile_list(vk_user_id)
 
     y = yadisk.YaDisk(token=yadisk_token)
     to_dir = yadisk_file_path
     from_dir = pc_download_file_path
 
-    print('Downloading files from VK to PC:')
+    print('\nDownloading files from VK to PC:')
     download_to_pc(vk_profile_list)
 
     print('\nUploading files from PC to Ya-disk:')
