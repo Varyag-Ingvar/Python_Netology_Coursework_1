@@ -57,10 +57,10 @@ def get_info_json(profile_list):
         photos_dict = {}
         size = file['sizes'][-1]['type']
         date = datetime.utcfromtimestamp(file['date']).strftime('%d.%m.%Y %H_%M_%S')
-
-        file_name = str(file['likes']['count']) + '.jpeg'
+        file_name = str(file['likes']['count']) + '.jpg'
+        file_name_1 = str(file['likes']['count'])
         if file_name in names_used:
-            file_name = f'{file_name}_{date}'
+            file_name = f'{file_name_1}_{date}.jpg'
         else:
             names_used.add(file_name)
 
